@@ -6,29 +6,41 @@ window.fun = window.fun || {
     startGame: function () {
         $('.overlay').hide();
         $('.menu').slideUp(50);
+        $('.caption').empty().html('New game!');
         var game = new this.Game(3);
         game.start();
     },
 
     endGame: function (game) {
+        var that = this;
         this.games[game.id] = game;
         this.generateScores();
-        this.showMenu();
+        var continueButton = $('<button>Back to menu</button>');
+        continueButton.off().on('click', function () {
+            that.showMenu.apply(that);
+        });
+        $('.tomenu').empty().append(continueButton);
     },
 
     generateScores: function () {
         $('.score tbody').empty();
         for (var i = 0; i < this.games.length; i++) {
-            var game = this.games[i];
-            console.log(game);
-            var tr = $('<tr><td>' + game.id + '</td><td>' + game.winner + '</td><td>' + game.duration + '</td></tr>');
+            var game = this.games[i],
+                tr;
+            if (game) {
+                tr = $('<tr><td>' + game.id + '</td><td>' + game.winner + '</td><td>' + game.duration + '</td></tr>');
+            } else {
+                tr = $('<tr><td>' + i + '</td><td>Unfinished</td></tr>');
+            }
             $('.score').append(tr);
         }
     },
 
     showMenu: function () {
         var that = this;
-        $('.start').off().on('click', function () {that.startGame.apply(that);});
+        $('.start').off().on('click', function () {
+            that.startGame.apply(that);
+        });
         $('.overlay').show();
         $('.menu').slideDown(200);
     },
@@ -52,6 +64,8 @@ fun.Game = function (size) {
     this.total = size * size;
     this.even = this.size % 2 === 0;
     this.winScenarios = this.size * 2 + 2;
+    this.won = 0;
+    this.picked = 0;
 };
 
 fun.Game.prototype = {
@@ -110,11 +124,14 @@ fun.Game.prototype = {
             win = that.sum(pdiag, that.currentPlayer.id);
         }
 
-        if (this.tiedScenarios === this.winScenarios) {
-            this.message('This game will result in a tie.');
-        }
         if (win) {
             this.end();
+        } else if (this.picked === this.total) {
+            this.message('Tied game!');
+        } else if (this.tiedScenarios === this.winScenarios) {
+            this.message('This game will result in a tie!');
+        } else {
+            this.message('No winner yet.');
         }
     },
 
@@ -122,6 +139,7 @@ fun.Game.prototype = {
         this.message('Player ' + this.currentPlayer.name + ' won!');
         this.duration = (new Date().getTime() - this.startTime) / 1000;
         this.winner = this.currentPlayer.name;
+        this.won = 1;
         fun.endGame(this);
     },
 
@@ -157,6 +175,7 @@ fun.Game.prototype = {
     },
 
     pickedSquare: function (row, cell, node) {
+        this.picked++;
         this.squares[row][cell] = this.currentPlayer.id;
         this.inverse[cell][row] = this.currentPlayer.id;
         node.append('<span>' + this.currentPlayer.symbol + '</span>');
@@ -169,10 +188,14 @@ fun.Game.prototype = {
             row = node.data('row'),
             cell = node.data('cell');
 
-        if (this.squares[row][cell] === 0) {
-            this.pickedSquare(row, cell, node);
+        if (this.won) {
+            this.message('Games finished!');
         } else {
-            this.message('That square is taken!');
+            if (this.squares[row][cell] === 0) {
+                this.pickedSquare(row, cell, node);
+            } else {
+                this.message('That square is taken!');
+            }
         }
     },
 
