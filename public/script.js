@@ -1,16 +1,49 @@
-window.ttt = window.ttt || {};
+SEED = 0;
 
-ttt.Player = function (id, symbol, name) {
+window.fun = window.fun || {
+    games: [],
+
+    startGame: function () {
+        $('.overlay').hide();
+        $('.menu').slideUp(50);
+        var game = new this.Game(3);
+        game.start();
+    },
+
+    endGame: function (game) {
+        this.games[game.id] = game;
+        this.generateScores();
+        this.showMenu();
+    },
+
+    generateScores: function () {
+        $('.score tbody').empty();
+        for (var i = 0; i < this.games.length; i++) {
+            var game = this.games[i];
+            console.log(game);
+            var tr = $('<tr><td>' + game.id + '</td><td>' + game.winner + '</td><td>' + game.duration + '</td></tr>');
+            $('.score').append(tr);
+        }
+    },
+
+    showMenu: function () {
+        var that = this;
+        $('.start').off().on('click', function () {that.startGame.apply(that);});
+        $('.overlay').show();
+        $('.menu').slideDown(200);
+    },
+};
+
+fun.Player = function (id, symbol, name) {
     this.id = id;
     this.name = name;
     this.symbol = symbol;
 };
 
-ttt.Game = function (size) {
-    this.board = $('.board');
-    this.playerX = new ttt.Player(1, 'X', 'X');
-    this.playerO = new ttt.Player(2, 'O', 'O');
-
+fun.Game = function (size) {
+    this.id = SEED++;
+    this.playerX = new fun.Player(1, 'X', 'X');
+    this.playerO = new fun.Player(2, 'O', 'O');
     this.players = [this.playerX, this.playerO];
     this.currentPlayer = this.playerX;
     this.size = size;
@@ -21,9 +54,10 @@ ttt.Game = function (size) {
     this.winScenarios = this.size * 2 + 2;
 };
 
-ttt.Game.prototype = {
+fun.Game.prototype = {
 
     start: function () {
+        this.startTime = new Date().getTime();
         this.generateTable();
     },
 
@@ -61,8 +95,6 @@ ttt.Game.prototype = {
         // get positive diagonal
         if (!win) {
             for (var i = this.inverse.length - 1, j = 0; i >= 0; i--) {
-                console.log(i);
-                console.log(j);
                 pdiag.push(that.inverse[i][j]);
                 j++;
             }
@@ -82,8 +114,15 @@ ttt.Game.prototype = {
             this.message('This game will result in a tie.');
         }
         if (win) {
-            this.message('Player ' + this.currentPlayer.name + ' won!');
+            this.end();
         }
+    },
+
+    end: function () {
+        this.message('Player ' + this.currentPlayer.name + ' won!');
+        this.duration = (new Date().getTime() - this.startTime) / 1000;
+        this.winner = this.currentPlayer.name;
+        fun.endGame(this);
     },
 
     message: function (msg) {
@@ -139,11 +178,13 @@ ttt.Game.prototype = {
 
     generateTable: function () {
         var that = this;
+        var _table = $('<table>').addClass('board');
+        $('div.content').empty().append(_table);
         for (var r = 0; r < this.size; r++) {
             var tr = $('<tr>');
             that.squares.push([]);
             that.inverse.push([]);
-            that.board.append(tr);
+            _table.append(tr);
             for (var c = 0; c < this.size; c++) {
                 var td = $('<td data-row="' + r + '" data-cell="' + c + '">');
                 td.on('click dblclick', function () {that.clickHandler.apply(that, arguments)});
@@ -160,6 +201,5 @@ ttt.Game.prototype = {
 
 
 $(document).ready(function () {
-    var tictactoe = new ttt.Game(3);
-    tictactoe.start();
+    fun.showMenu();
 });
