@@ -1,27 +1,62 @@
-@lightblue: blue;
+@black: #444;
+@white: #fff;
+@grey: #ccc;
+@pink: pink;
 
 
 
-html {
+html, body{
     width: 100%;
     height: 100%;
+    background: @grey;
+    margin: 0;
+    padding: 0;
 }
 
-.page {
+div.page {
+    position: relative;
+    background: @white;
+    border-left: 2px solid @black;
+    border-right: 2px solid @black;
     width: 960px;
+    min-height: 800px;
     margin: 0px auto;
-}
 
-table.board {
-    border: 0;
+    .clear {
+        clear: both;
+    }
 
-    td {
-        height: 50px;
-        width: 50px;
-        background-color: pink;
+    section {
 
-        &:hover {
-            background-color: @lightblue
+        table.board {
+            padding-top: 250px;
+            margin: 0px auto;
+            border: 0;
+
+            td {
+                height: 50px;
+                width: 50px;
+                background-color: pink;
+
+                &:hover {
+                    background-color: blue;
+                }
+            }
+        }
+    }
+
+    aside {
+        position: absolute;
+        width: 300px;
+        height: 300px;
+        right: 0px;
+        top: 0px;
+
+        table.score {
+            position: absolute;
+            right: 0px;
+            width: 250px;
+            border: 1px solid red;
         }
     }
 }

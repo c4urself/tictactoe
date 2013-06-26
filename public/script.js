@@ -17,6 +17,8 @@ ttt.Game = function (size) {
     this.squares = [];
     this.inverse = [];
     this.total = size * size;
+    this.even = this.size % 2 === 0;
+    this.winScenarios = this.size * 2 + 2;
 };
 
 ttt.Game.prototype = {
@@ -31,10 +33,12 @@ ttt.Game.prototype = {
             ndiag = [],
             pdiag = [];
 
+        this.tiedScenarios = 0;
+
         // check rows
         if (!win) {
             for (var i = 0; i < this.squares.length; i++) {
-                win = that.checkSum(that.squares[i], that.currentPlayer.id);
+                win = that.sum(that.squares[i], that.currentPlayer.id);
                 if (win) break;
 
                 // setup for negative diagonal
@@ -49,7 +53,7 @@ ttt.Game.prototype = {
         // check columns
         if (!win) {
             for (var i = 0; i < this.inverse.length; i++) {
-                win = that.checkSum(that.inverse[i], that.currentPlayer.id);
+                win = that.sum(that.inverse[i], that.currentPlayer.id);
                 if (win) break;
             }
         }
@@ -66,15 +70,17 @@ ttt.Game.prototype = {
 
         // check negative diagonal
         if (!win) {
-            win = that.checkSum(ndiag, that.currentPlayer.id);
+            win = that.sum(ndiag, that.currentPlayer.id);
         }
 
         // check positive diagonal
         if (!win) {
-            win = that.checkSum(pdiag, that.currentPlayer.id);
+            win = that.sum(pdiag, that.currentPlayer.id);
         }
 
-
+        if (this.tiedScenarios === this.winScenarios) {
+            this.message('This game will result in a tie.');
+        }
         if (win) {
             this.message('Player ' + this.currentPlayer.name + ' won!');
         }
@@ -84,8 +90,18 @@ ttt.Game.prototype = {
         $('.caption').html(msg);
     },
 
-    checkSum: function (arr, id) {
-        var sum = 0;
+    tieCheck: function (arr) {
+        if (arr.indexOf(1) > -1 && arr.indexOf(2) > -1) {
+            return true;
+        }
+    },
+
+    sum: function (arr, id) {
+        if (this.tieCheck(arr)) {
+            this.tiedScenarios += 1;
+            return false;
+        }
+        var sum = this.even && id === 1 ? 1 : 0; // add one for even grids
         for (var i = 0; i < arr.length; i++) {
             if (arr[i] === 0) {
                 sum = 0;
@@ -94,8 +110,8 @@ ttt.Game.prototype = {
                 sum += arr[i]
             }
         }
-        var same = id === 2 ? sum % 2 === 0 : sum % 2 !== 0;
-        if (same && sum === (this.size * id)) {
+        var full = id === 2 ? sum % 2 === 0 : sum % 2 !== 0;
+        if (full && sum === (this.size * id)) {
             return true;
         }
         return false;
@@ -144,6 +160,6 @@ ttt.Game.prototype = {
 
 
 $(document).ready(function () {
-    var tictactoe = new ttt.Game(5);
+    var tictactoe = new ttt.Game(3);
     tictactoe.start();
 });
